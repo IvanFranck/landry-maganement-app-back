@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -13,7 +14,7 @@ datasource db {
 model User {
   id       Int     @id @default(autoincrement())
   username String? @db.VarChar(255)
-  email    String  @db.VarChar(255)
+  email    String  @unique @db.VarChar(255)
   password String  @db.VarChar(255)
 
   createdAt DateTime @default(now())
@@ -23,7 +24,7 @@ model User {
 model Customer {
   id                Int                 @id @default(autoincrement())
   name              String              @db.VarChar(255)
-  phone             Int
+  phone             Int                 @unique
   address           String?             @db.VarChar(255)
   CustomerOnCommand CustomerOnCommand[]
 }

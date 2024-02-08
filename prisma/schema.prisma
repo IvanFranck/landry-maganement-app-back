@@ -34,7 +34,7 @@ model Service {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  label       String
+  label       String             @unique
   price       Int
   description String?
   commands    ServiceOnCommand[]

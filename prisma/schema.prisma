@@ -22,11 +22,11 @@ model User {
 }
 
 model Customer {
-  id                Int                 @id @default(autoincrement())
-  name              String              @db.VarChar(255)
-  phone             Int                 @unique
-  address           String?             @db.VarChar(255)
-  CustomerOnCommand CustomerOnCommand[]
+  id       Int       @id @default(autoincrement())
+  name     String    @db.VarChar(255)
+  phone    Int       @unique
+  address  String?   @db.VarChar(255)
+  commands Command[]
 }
 
 model Service {
@@ -41,32 +41,26 @@ model Service {
 }
 
 model Command {
-  id        Int      @id
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   price       Int
   description String? @db.VarChar(255)
   discount    Int?
+  customerId  Int
 
-  services          ServiceOnCommand[]
-  CustomerOnCommand CustomerOnCommand[]
+  services ServiceOnCommand[]
+  customer Customer           @relation(fields: [customerId], references: [id])
 }
 
 model ServiceOnCommand {
-  service   Service @relation(fields: [serviceId], references: [id])
+  quantity  Int
   serviceId Int
-  command   Command @relation(fields: [commandId], references: [id])
   commandId Int
 
+  service Service @relation(fields: [serviceId], references: [id])
+  command Command @relation(fields: [commandId], references: [id], onDelete: Cascade)
+
   @@id([serviceId, commandId])
-}
-
-model CustomerOnCommand {
-  customer   Customer @relation(fields: [customerId], references: [id])
-  customerId Int
-  command    Command  @relation(fields: [commandId], references: [id])
-  commandId  Int
-
-  @@id([customerId, commandId])
 }

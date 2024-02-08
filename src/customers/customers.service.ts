@@ -16,7 +16,7 @@ export class CustomersService {
 
       return {
         message: 'customer created',
-        customer: { ...customer },
+        customer,
       };
     } catch (error) {
       console.error('error: ', error);
@@ -60,7 +60,7 @@ export class CustomersService {
       }
       return {
         message: 'customer found',
-        customer: { ...customer },
+        customer,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -87,7 +87,7 @@ export class CustomersService {
       }
       return {
         message: 'customer updated',
-        customer: { ...customer },
+        customer,
       };
     } catch (error) {
       if (error.code === 'P2025') {
@@ -107,7 +107,7 @@ export class CustomersService {
       });
       return {
         message: 'customer deleted',
-        customer: { ...customer },
+        customer,
       };
     } catch (error) {
       console.error('error: ', error);

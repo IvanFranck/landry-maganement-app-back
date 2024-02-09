@@ -12,13 +12,24 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  username String? @db.VarChar(255)
-  email    String  @unique @db.VarChar(255)
-  password String  @db.VarChar(255)
+  id              Int     @id @default(autoincrement())
+  username        String  @db.VarChar(255)
+  phone           Int     @unique
+  password        String  @db.VarChar(255)
+  signUpCompleted Boolean @default(false)
 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  OTPCode   OTPCode[]
+}
+
+model OTPCode {
+  id        Int      @id @default(autoincrement())
+  code      Int
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Customer {
@@ -51,7 +62,7 @@ model Command {
   customerId  Int
 
   services ServiceOnCommand[]
-  customer Customer           @relation(fields: [customerId], references: [id])
+  customer Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model ServiceOnCommand {

@@ -7,7 +7,7 @@ import { CommandsModule } from './commands/commands.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import Joi from 'joi';
+import * as joi from 'joi';
 
 @Module({
   imports: [
@@ -18,10 +18,15 @@ import Joi from 'joi';
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema: Joi.object({
-        DATABASE_URL: Joi.string().required(),
-        OTP_TTL: Joi.string().required(),
-        PORT: Joi.number().required(),
+      validationSchema: joi.object({
+        DATABASE_URL: joi.string().required(),
+        PORT: joi.number().required(),
+        AXIOS_TIMEOUT: joi.number().required(),
+        SMS_API_BASE_URL: joi.string().required(),
+        SMS_API_KEY: joi.string().required(),
+        TWOFA_APPLICATION_ID: joi.string().required(),
+        TWOFA_MESSAGE_TEMPLATE_ID: joi.string().required(),
+        APP_NAME: joi.string().required(),
       }),
     }),
   ],

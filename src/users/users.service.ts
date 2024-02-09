@@ -1,12 +1,20 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { CreateUserDto } from './dto/creat-user-dto';
+import { CreateUserDto } from './dto/create-user-dto';
 import * as bcrypt from 'bcrypt';
 import { CreatedUserEntity } from './entities/created-user.entity';
+import { ConfigService } from '@nestjs/config';
+import { OTPService } from './otp.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(UsersService.name);
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly otpService: OTPService,
+    private readonly configService: ConfigService,
+  ) {}
+
   /**
    * Asynchronous function to create a user.
    *
@@ -19,16 +27,43 @@ export class UsersService {
   ): Promise<{ message: string; user: CreatedUserEntity }> {
     try {
       const encryptedPassword = await bcrypt.hash(createUserDto.password, 8);
+
+      const data = await this.otpService.sendOTPSMS({
+        applicationId: this.configService.get('SMS_API_APPLICATION_ID'),
+        messageId: this.configService.get('SMS_API_MESSAGE_ID'),
+        from: this.configService.get('APP_NAME'),
+        to: createUserDto.phone.toString(),
+      });
+
+      this.logger.log(data);
+
+      if (data.smsStatus === 'MESSAGE_NOT_SENT') {
+        throw new BadRequestException(
+          "can't send signup code to this phone number",
+        );
+      }
+
       const user = await this.prisma.user.create({
-        data: { ...createUserDto, password: encryptedPassword },
+        data: {
+          ...createUserDto,
+          password: encryptedPassword,
+          OTPCode: {
+            create: {
+              pinId: data.pinId,
+            },
+          },
+        },
         select: {
           id: true,
           username: true,
           phone: true,
           createdAt: true,
           updatedAt: true,
+          OTPCode: true,
         },
       });
+
+      this.logger.log(user);
 
       return {
         message: 'user created',

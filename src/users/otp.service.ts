@@ -3,31 +3,33 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SendOTPDto } from './dto/send-otp.dto';
 import { catchError, firstValueFrom } from 'rxjs';
 import { AxiosError, AxiosResponse } from 'axios';
-import { PinResponseEntity } from './entities/pin-response.entity';
 import { VerifiedOTPResponseEntity } from './entities/verify-otp-response.entity';
+import * as twilio from 'twilio';
+import { ConfigService } from '@nestjs/config';
+import { VerificationInstance } from 'twilio/lib/rest/verify/v2/service/verification';
 
 @Injectable()
 export class OTPService {
   private readonly logger = new Logger(OTPService.name);
-  constructor(private readonly httpService: HttpService) {}
+  private twilioClient: twilio.Twilio = twilio(
+    this.configService.get('TWILIO_VERIFY_API_ACCOUNT_SID'),
+    this.configService.get('TWILIO_VERIFY_API_AUTH_KEY'),
+  );
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  /**
-   * Sends an OTP SMS using the provided SendOTPDto.
-   *
-   * @param {SendOTPDto} sendOTPDto - the data for sending the OTP SMS
-   * @return {Promise<PinResponseEntity>} the response data from sending the OTP SMS
-   */
-  async sendOTPSMS(sendOTPDto: SendOTPDto): Promise<PinResponseEntity> {
-    const { data }: AxiosResponse<PinResponseEntity> = await firstValueFrom(
-      this.httpService.post('/2fa/2/pin?ncNeeded=false', sendOTPDto).pipe(
-        catchError((error: AxiosError) => {
-          this.logger.error(error.response.data);
-          throw 'An error occurred when sending OTP';
-        }),
-      ),
-    );
+  async sendOTPSMS(sendOTPDto: SendOTPDto): Promise<VerificationInstance> {
+    try {
+      const data = await this.twilioClient.verify.v2
+        .services(this.configService.get('TWILIO_VERIFY_API_SERVICE_ID'))
+        .verifications.create(sendOTPDto);
 
-    return data;
+      return data;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   /**

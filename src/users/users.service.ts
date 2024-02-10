@@ -29,15 +29,13 @@ export class UsersService {
       const encryptedPassword = await bcrypt.hash(createUserDto.password, 8);
 
       const data = await this.otpService.sendOTPSMS({
-        applicationId: this.configService.get('SMS_API_APPLICATION_ID'),
-        messageId: this.configService.get('SMS_API_MESSAGE_ID'),
-        from: this.configService.get('APP_NAME'),
-        to: createUserDto.phone.toString(),
+        to: `+237${createUserDto.phone.toString()}`,
+        channel: 'sms',
       });
 
-      this.logger.log(data);
+      this.logger.log('OTP data', data);
 
-      if (data.smsStatus === 'MESSAGE_NOT_SENT') {
+      if (data.status === 'canceled') {
         throw new BadRequestException(
           "can't send signup code to this phone number",
         );
@@ -49,7 +47,7 @@ export class UsersService {
           password: encryptedPassword,
           OTPCode: {
             create: {
-              pinId: data.pinId,
+              pinId: data.sid,
             },
           },
         },

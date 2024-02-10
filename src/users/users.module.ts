@@ -13,8 +13,9 @@ import { OTPService } from './otp.service';
       useFactory: async (configService: ConfigService) => ({
         timeout: configService.get('AXIOS_TIMEOUT'),
         baseURL: configService.get('SMS_API_BASE_URL'),
-        headers: {
-          Authorization: `App ${configService.get('SMS_API_KEY')}`,
+        auth: {
+          username: configService.get('TWILIO_VERIFY_API_AUTH_KEY'),
+          password: configService.get('TWILIO_VERIFY_API_SERVICE_ID'),
         },
       }),
       inject: [ConfigService],

@@ -1,6 +1,4 @@
 export class SendOTPDto {
-  applicationId: string;
-  messageId: string;
-  from: string;
+  channel: string;
   to: string;
 }

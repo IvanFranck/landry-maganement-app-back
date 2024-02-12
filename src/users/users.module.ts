@@ -4,7 +4,6 @@ import { PrismaService } from 'src/prisma.service';
 import { UsersController } from './users.controller';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { OTPService } from './otp.service';
 
 @Module({
   imports: [
@@ -22,6 +21,6 @@ import { OTPService } from './otp.service';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, PrismaService, OTPService],
+  providers: [UsersService, PrismaService],
 })
 export class UsersModule {}

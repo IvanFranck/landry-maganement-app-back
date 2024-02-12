@@ -3,17 +3,11 @@ import { PrismaService } from 'src/prisma.service';
 import { CreateUserDto } from './dto/create-user-dto';
 import * as bcrypt from 'bcrypt';
 import { CreatedUserEntity } from './entities/created-user.entity';
-import { ConfigService } from '@nestjs/config';
-import { OTPService } from './otp.service';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly otpService: OTPService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
    * Asynchronous function to create a user.
@@ -28,28 +22,10 @@ export class UsersService {
     try {
       const encryptedPassword = await bcrypt.hash(createUserDto.password, 8);
 
-      const data = await this.otpService.sendOTPSMS({
-        to: `+237${createUserDto.phone.toString()}`,
-        channel: 'sms',
-      });
-
-      this.logger.log('OTP data', data);
-
-      if (data.status === 'canceled') {
-        throw new BadRequestException(
-          "can't send signup code to this phone number",
-        );
-      }
-
       const user = await this.prisma.user.create({
         data: {
           ...createUserDto,
           password: encryptedPassword,
-          OTPCode: {
-            create: {
-              pinId: data.sid,
-            },
-          },
         },
         select: {
           id: true,
@@ -57,7 +33,6 @@ export class UsersService {
           phone: true,
           createdAt: true,
           updatedAt: true,
-          OTPCode: true,
         },
       });
 

@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import * as joi from 'joi';
+import { OTPModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import * as joi from 'joi';
     CommandsModule,
     UsersModule,
     AuthModule,
+    OTPModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({

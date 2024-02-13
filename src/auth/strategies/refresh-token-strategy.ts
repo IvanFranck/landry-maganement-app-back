@@ -1,23 +1,20 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  ACCESS_TOKEN_STRATEGY_NAME,
-  JWT_CONSTANT,
-} from '../constants';
+import { JWT_CONSTANT, REFRESH_TOKEN_COOKIE_NAME } from '../constants';
 import { Injectable } from '@nestjs/common';
+import { REFRESH_TOKEN_STRATEGY_NAME } from '../constants/index';
 import { JWTDecodedEntity } from '../entites/jwt-decoded-payload.entity';
 
 @Injectable()
-export class AccessTokenStrategy extends PassportStrategy(
+export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
-  ACCESS_TOKEN_STRATEGY_NAME,
+  REFRESH_TOKEN_STRATEGY_NAME,
 ) {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: Request) => req.cookies?.[ACCESS_TOKEN_COOKIE_NAME],
+        (req: Request) => req.cookies?.[REFRESH_TOKEN_COOKIE_NAME],
       ]),
       ignoreExpiration: false,
       secretOrKey: JWT_CONSTANT.PUBLIC_KEY,

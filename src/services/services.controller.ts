@@ -9,10 +9,13 @@ import {
   Put,
   ParseIntPipe,
   HttpStatus,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { AccessTokenAuthGuard } from 'src/auth/guards/access-token-auth.guard';
 
 @Controller('services')
 export class ServicesController {
@@ -23,8 +26,10 @@ export class ServicesController {
     return await this.servicesService.create(createServiceDto);
   }
 
+  @UseGuards(AccessTokenAuthGuard)
   @Get()
-  async findAll() {
+  async findAll(@Req() req: any) {
+    console.log('service controller', req.user);
     return await this.servicesService.findAll();
   }
 

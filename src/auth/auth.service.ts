@@ -11,6 +11,7 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from './constants';
+import { RefreshTokenGuardDto } from './dto/refresh-token-guard.dto';
 
 @Injectable()
 export class AuthService {
@@ -58,12 +59,8 @@ export class AuthService {
     const { id, username, phone } = user;
     const payload = { sub: id, username, phone };
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '2d' }),
-      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
-    ]);
-    const accessTokenExpires = getExpiry(2, 'days');
-    const refreshTokenExpires = getExpiry(7, 'days');
+    const [accessToken, refreshToken] = await this.getTokens(payload);
+    const [accessTokenExpires, refreshTokenExpires] = this.getExpiries();
 
     response.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
       httpOnly: true,
@@ -76,5 +73,44 @@ export class AuthService {
     });
   }
 
-  async refreshToken() {}
+  async refreshToken(user: RefreshTokenGuardDto, response: Response) {
+    const [accessToken, refreshToken] = await this.getTokens(user);
+    const [accessTokenExpires, refreshTokenExpires] = this.getExpiries();
+
+    response.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
+      httpOnly: true,
+      expires: accessTokenExpires,
+    });
+
+    response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      expires: refreshTokenExpires,
+    });
+  }
+
+  /**
+   * Asynchronously retrieves tokens for the given payload.
+   *
+   * @param {{ sub: number; username: string; phone: number }} payload - the payload containing sub, username, and phone
+   * @return {Promise<string[]>} an array of tokens as a promise
+   */
+  async getTokens(payload: {
+    sub: number;
+    username: string;
+    phone: number;
+  }): Promise<string[]> {
+    return await Promise.all([
+      this.jwtService.signAsync(payload, { expiresIn: '2d' }),
+      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
+    ]);
+  }
+
+  /**
+   * retrieves an array of expiry dates.
+   *
+   * @return {Date[]} an array of dates
+   */
+  getExpiries(): Date[] {
+    return [getExpiry(2, 'days'), getExpiry(7, 'days')];
+  }
 }

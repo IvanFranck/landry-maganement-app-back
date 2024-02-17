@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -35,17 +35,22 @@ export class AuthService {
       },
     });
 
+    if (!user) {
+      throw new UnprocessableEntityException('informations incorrectes');
+    }
+
     const isPaswwordValid = await bcrypt.compare(
       validateUserDto.password,
       user.password,
     );
 
-    if (user && isPaswwordValid) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...result } = user;
-      return result;
+    if (!isPaswwordValid) {
+      throw new UnprocessableEntityException('informations incorrectes');
     }
-    return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result;
   }
 
   /**
@@ -56,8 +61,8 @@ export class AuthService {
    * @return {Promise<void>} undefined
    */
   async login(user: Omit<User, 'password'>, response: Response): Promise<void> {
-    const { id, username, phone } = user;
-    const payload = { sub: id, username, phone };
+    const { id, username, phone, signUpCompleted } = user;
+    const payload = { sub: id, username, phone, signUpCompleted };
 
     const [accessToken, refreshToken] = await this.getTokens(payload);
     const [accessTokenExpires, refreshTokenExpires] = this.getExpiries();

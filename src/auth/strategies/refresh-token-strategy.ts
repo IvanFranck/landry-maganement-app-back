@@ -22,7 +22,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
   }
 
   async validate(payload: JWTDecodedEntity) {
-    const { sub, phone, username } = payload;
-    return { sub, phone, username };
+    const { sub, phone, username, signUpCompleted } = payload;
+    return { sub, phone, username, signUpCompleted };
   }
 }

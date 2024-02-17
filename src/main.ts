@@ -10,6 +10,8 @@ async function bootstrap() {
   });
   const configService = app.get(ConfigService);
 
+  app.enableCors();
+
   app.use(cookieParser());
 
   app.useGlobalPipes(

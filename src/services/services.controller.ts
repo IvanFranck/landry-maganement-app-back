@@ -18,7 +18,10 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { AccessTokenAuthGuard } from 'src/auth/guards/access-token-auth.guard';
 
 @UseGuards(AccessTokenAuthGuard)
-@Controller('services')
+@Controller({
+  path: 'services',
+  version: '1',
+})
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 

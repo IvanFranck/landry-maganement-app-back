@@ -4,7 +4,10 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Response } from 'express';
 import { RefreshTokenAuthGuard } from './guards/refresh-token-auth.guard';
 
-@Controller('auth')
+@Controller({
+  path: 'auth',
+  version: '1',
+})
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

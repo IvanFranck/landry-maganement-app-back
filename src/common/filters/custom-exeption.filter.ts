@@ -23,10 +23,11 @@ export class CustomExptionFilter implements ExceptionFilter {
       error instanceof HttpException ? error.name : 'Internal Server Error';
 
     response.status(status).json({
-      statusCode: status,
+      status: status,
       message: error.message,
       error: errorName,
       path: request.url,
+      timestamp: new Date().toISOString(),
     });
   }
 }

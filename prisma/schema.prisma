@@ -1,9 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,52 +8,48 @@ datasource db {
 }
 
 model User {
-  id              Int     @id @default(autoincrement())
-  username        String  @db.VarChar(255)
-  phone           Int     @unique
-  password        String  @db.VarChar(255)
-  signUpCompleted Boolean @default(false)
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  username        String   @db.VarChar(255)
+  phone           Int      @unique
+  password        String   @db.VarChar(255)
+  signUpCompleted Boolean  @default(false)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  OTPCode   OTPCode[]
-}
-
-model OTPCode {
-  id        Int      @id @default(autoincrement())
-  pinId     String   @unique
-  createdAt DateTime @default(now())
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services Service[]
 }
 
 model Customer {
-  id       Int       @id @default(autoincrement())
-  name     String    @db.VarChar(255)
-  phone    Int       @unique
-  address  String?   @db.VarChar(255)
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @db.VarChar(255)
+  phone     Int      @unique
+  address   String?  @db.VarChar(255)
+
   commands Command[]
 }
 
 model Service {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  label       String             @unique
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  label       String   @unique
   price       Int
   description String?
-  commands    ServiceOnCommand[]
+  userId      Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  commands ServiceOnCommand[]
 }
 
 model Command {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   price       Int
-  description String? @db.VarChar(255)
+  description String?  @db.VarChar(255)
   discount    Int?
   customerId  Int
 
@@ -70,7 +62,7 @@ model ServiceOnCommand {
   serviceId Int
   commandId Int
 
-  service Service @relation(fields: [serviceId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   command Command @relation(fields: [commandId], references: [id], onDelete: Cascade)
 
   @@id([serviceId, commandId])

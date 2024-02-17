@@ -6,7 +6,7 @@ import { ValidatedUserEntity } from './entites/validate-user.entity';
 import { User } from '@prisma/client';
 import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { getExpiry } from 'src/utils/dateTimeUtilities';
+import { getExpiry } from '@common/utils/dateTimeUtilities';
 import {
   ACCESS_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,

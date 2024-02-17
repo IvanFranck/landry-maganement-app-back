@@ -1,13 +1,14 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/prisma.service';
 import { Service } from '@prisma/client';
-import { ResponseInterface } from '@/common/interfaces/response.interface';
+import { CustomResponseInterface } from '@/common/interfaces/response.interface';
 import { AccessTokenValidatedRequestInterface } from '@/common/interfaces/access-token-validated-request.interface';
 
 @Injectable()
@@ -19,12 +20,12 @@ export class ServicesService {
    *
    * @param {CreateServiceDto} createServiceDto The service data
    * @param {AccessTokenValidatedRequestInterface} request The validated request object
-   * @return {Promise<ResponseInterface<Service>>} The created service
+   * @return {Promise<CustomResponseInterface<Service>>} The created service
    */
   async create(
     createServiceDto: CreateServiceDto,
     request: AccessTokenValidatedRequestInterface,
-  ): Promise<ResponseInterface<Service>> {
+  ): Promise<CustomResponseInterface<Service>> {
     const id = request.user.sub;
     try {
       const user = await this.prisma.user.update({
@@ -46,7 +47,6 @@ export class ServicesService {
         data: user.services[0],
       };
     } catch (error) {
-      console.error('error: ', error);
       if (error.code === 'P2002') {
         throw new BadRequestException('un service avec ce nom existe déja');
       }
@@ -59,21 +59,28 @@ export class ServicesService {
    *
    * @return {Promise<Service[]>} The list of services found
    */
-  async findAll(): Promise<Service[]> {
+  async findAll(
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<CustomResponseInterface<Service[]>> {
+    const userId = request.user.sub;
     try {
-      const services = await this.prisma.service.findMany();
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+        include: {
+          services: true,
+        },
+      });
 
-      if (!services || services.length === 0) {
-        throw new NotFoundException('any service found');
-      }
+      const services = user.services;
 
-      return services;
+      return {
+        message: 'liste des services',
+        data: services,
+      };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      console.error('error: ', error);
-      throw new NotFoundException(error);
+      throw new InternalServerErrorException(error);
     }
   }
 
@@ -83,17 +90,22 @@ export class ServicesService {
    * @param {string} name - the name of the service to find
    * @return {Promise<{ message: string, service: Service }>} an object containing a message and the service found
    */
-  async findOne(name: string): Promise<{ message: string; service: Service }> {
+  async findOne(
+    name: string,
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<{ message: string; service: Service }> {
     try {
-      const services = await this.findAll();
+      const services = await this.findAll(request);
 
-      const service = services.find((service) => service.label.includes(name));
+      const service = services.data.find((service) =>
+        service.label.includes(name),
+      );
 
       if (!service) {
         throw new NotFoundException('service not found');
       }
       return {
-        message: 'service found',
+        message: 'service trouvé',
         service,
       };
     } catch (error) {

@@ -20,9 +20,12 @@ import {
   ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { AccessTokenValidatedRequestInterface } from '@/common/interfaces/access-token-validated-request.interface';
+import { Service } from '@prisma/client';
+import { CustomResponseInterface } from '@/common/interfaces/response.interface';
 
 @ApiTags('services')
 @UseGuards(AccessTokenAuthGuard)
@@ -44,15 +47,25 @@ export class ServicesController {
     return await this.servicesService.create(createServiceDto, req);
   }
 
+  /**
+   * Find all services.
+   *
+   * @return {Promise<CustomResponseInterface<Service[]>>} The list of all services
+   */
+  @ApiOkResponse({ description: 'liste des services' })
   @Get()
-  async findAll(@Req() req: any) {
-    console.log('service controller', req.user);
-    return await this.servicesService.findAll();
+  async findAll(
+    @Req() req: AccessTokenValidatedRequestInterface,
+  ): Promise<CustomResponseInterface<Service[]>> {
+    return await this.servicesService.findAll(req);
   }
 
   @Get('search')
-  async findOne(@Query('name') name: string) {
-    return await this.servicesService.findOne(name);
+  async findOne(
+    @Query('name') name: string,
+    @Req() req: AccessTokenValidatedRequestInterface,
+  ) {
+    return await this.servicesService.findOne(name, req);
   }
 
   @Put(':id')

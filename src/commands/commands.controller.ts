@@ -8,12 +8,18 @@ import {
   ParseIntPipe,
   HttpStatus,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandsService } from './commands.service';
 import { CreateCommandDto } from './dto/create-command.dto';
 import { UpdateCommandDto } from './dto/update-command.dto';
+import { AccessTokenAuthGuard } from 'src/auth/guards/access-token-auth.guard';
 
-@Controller('commands')
+@UseGuards(AccessTokenAuthGuard)
+@Controller({
+  path: 'commands',
+  version: '1',
+})
 export class CommandsController {
   constructor(private readonly commandsService: CommandsService) {}
 

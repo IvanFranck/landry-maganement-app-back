@@ -9,12 +9,18 @@ import {
   HttpStatus,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { AccessTokenAuthGuard } from 'src/auth/guards/access-token-auth.guard';
 
-@Controller('customers')
+@UseGuards(AccessTokenAuthGuard)
+@Controller({
+  path: 'customers',
+  version: '1',
+})
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 

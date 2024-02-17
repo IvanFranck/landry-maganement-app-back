@@ -7,33 +7,48 @@ import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/prisma.service';
 import { Service } from '@prisma/client';
+import { ResponseInterface } from '@/common/interfaces/response.interface';
+import { AccessTokenValidatedRequestInterface } from '@/common/interfaces/access-token-validated-request.interface';
 
 @Injectable()
 export class ServicesService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * create service.
+   * A function to create a new service.
    *
-   * @param {CreateServiceDto} createServiceDto - the data to create a new service
-   * @return {Promise<{ messge: string, service: Service }>} a Promise containing an object with a message and the created service
+   * @param {CreateServiceDto} createServiceDto The service data
+   * @param {AccessTokenValidatedRequestInterface} request The validated request object
+   * @return {Promise<ResponseInterface<Service>>} The created service
    */
   async create(
     createServiceDto: CreateServiceDto,
-  ): Promise<{ messge: string; service: Service }> {
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<ResponseInterface<Service>> {
+    const id = request.user.sub;
     try {
-      const service = await this.prisma.service.create({
-        data: { ...createServiceDto },
+      const user = await this.prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          services: {
+            create: createServiceDto,
+          },
+        },
+        select: {
+          services: true,
+        },
       });
 
       return {
-        messge: 'service created!',
-        service,
+        message: 'service créé!',
+        data: user.services[0],
       };
     } catch (error) {
       console.error('error: ', error);
       if (error.code === 'P2002') {
-        throw new BadRequestException('service with this name already exists');
+        throw new BadRequestException('un service avec ce nom existe déja');
       }
       throw new BadRequestException(error);
     }

@@ -28,7 +28,7 @@ export class AuthController {
     await this.authService.login(req.user, response);
     response.send({
       message: 'user logged in',
-      user: req.user,
+      data: req.user,
     });
   }
 

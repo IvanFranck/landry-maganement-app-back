@@ -16,7 +16,15 @@ import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { AccessTokenAuthGuard } from 'src/auth/guards/access-token-auth.guard';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { AccessTokenValidatedRequestInterface } from '@/common/interfaces/access-token-validated-request.interface';
 
+@ApiTags('services')
 @UseGuards(AccessTokenAuthGuard)
 @Controller({
   path: 'services',
@@ -26,8 +34,14 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Post()
-  async create(@Body() createServiceDto: CreateServiceDto) {
-    return await this.servicesService.create(createServiceDto);
+  @ApiBody({ type: CreateServiceDto })
+  @ApiCreatedResponse({ description: 'service créé!' })
+  @ApiBadRequestResponse({ description: 'un service avec ce nom existe déja' })
+  async create(
+    @Body() createServiceDto: CreateServiceDto,
+    @Req() req: AccessTokenValidatedRequestInterface,
+  ) {
+    return await this.servicesService.create(createServiceDto, req);
   }
 
   @Get()

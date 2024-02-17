@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common/pipes';
 import { ConfigService } from '@nestjs/config';
 import * as cookieParser from 'cookie-parser';
+import { CustomExptionFilter } from '@common/filters/custom-exeption.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -11,7 +12,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors();
-
+  app.useGlobalFilters(new CustomExptionFilter());
   app.use(cookieParser());
 
   app.useGlobalPipes(

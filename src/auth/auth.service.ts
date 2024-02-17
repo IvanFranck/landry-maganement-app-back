@@ -1,4 +1,4 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -36,7 +36,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnprocessableEntityException('informations incorrectes');
+      throw new UnauthorizedException('invalid credentials');
     }
 
     const isPaswwordValid = await bcrypt.compare(
@@ -45,7 +45,7 @@ export class AuthService {
     );
 
     if (!isPaswwordValid) {
-      throw new UnprocessableEntityException('informations incorrectes');
+      throw new UnauthorizedException('invalid credentials');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

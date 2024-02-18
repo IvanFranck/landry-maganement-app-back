@@ -14,6 +14,9 @@ async function bootstrap() {
   });
   const configService = app.get(ConfigService);
 
+  // enabling cors
+  app.enableCors();
+
   // enabling versioning
   app.enableVersioning({
     type: VersioningType.URI,
@@ -29,9 +32,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config, {});
   SwaggerModule.setup('api', app, document);
-
-  // enabling cors
-  app.enableCors();
 
   // setting up custom exception global filters
   app.useGlobalFilters(new CustomExptionFilter());

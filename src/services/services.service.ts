@@ -38,7 +38,12 @@ export class ServicesService {
           },
         },
         select: {
-          services: true,
+          services: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 1,
+          },
         },
       });
 

@@ -49,7 +49,7 @@ export class ServicesService {
 
       return {
         message: 'service créé!',
-        data: user.services[0],
+        details: user.services[0],
       };
     } catch (error) {
       if (error.code === 'P2002') {
@@ -82,7 +82,7 @@ export class ServicesService {
 
       return {
         message: 'liste des services',
-        data: services,
+        details: services,
       };
     } catch (error) {
       throw new InternalServerErrorException(error);
@@ -95,14 +95,14 @@ export class ServicesService {
    * @param {string} name - the name of the service to find
    * @return {Promise<{ message: string, service: Service }>} an object containing a message and the service found
    */
-  async findOne(
+  async findOneByName(
     name: string,
     request: AccessTokenValidatedRequestInterface,
   ): Promise<{ message: string; service: Service }> {
     try {
       const services = await this.findAll(request);
 
-      const service = services.data.find((service) =>
+      const service = services.details.find((service) =>
         service.label.includes(name),
       );
 
@@ -112,6 +112,31 @@ export class ServicesService {
       return {
         message: 'service trouvé',
         service,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('error: ', error);
+      throw new NotFoundException(error);
+    }
+  }
+
+  async findOneById(
+    id: number,
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<CustomResponseInterface<Service>> {
+    try {
+      const services = await this.findAll(request);
+
+      const service = services.details.find((service) => service.id === id);
+
+      if (!service) {
+        throw new NotFoundException('service not found');
+      }
+      return {
+        message: 'service trouvé',
+        details: service,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {

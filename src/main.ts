@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common/pipes';
 import { ConfigService } from '@nestjs/config';
-import * as cookieParser from 'cookie-parser';
 import { CustomExptionFilter } from '@common/filters/custom-exeption.filter';
 import { VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -37,7 +36,7 @@ async function bootstrap() {
   app.useGlobalFilters(new CustomExptionFilter());
 
   // setting up cookie parser
-  app.use(cookieParser());
+  // app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({

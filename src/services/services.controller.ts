@@ -61,11 +61,23 @@ export class ServicesController {
   }
 
   @Get('search')
-  async findOne(
+  async findOneByname(
     @Query('name') name: string,
     @Req() req: AccessTokenValidatedRequestInterface,
   ) {
-    return await this.servicesService.findOne(name, req);
+    return await this.servicesService.findOneByName(name, req);
+  }
+
+  @Get(':id')
+  async findOneById(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Req() req: AccessTokenValidatedRequestInterface,
+  ) {
+    return await this.servicesService.findOneById(id, req);
   }
 
   @Put(':id')

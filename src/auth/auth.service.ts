@@ -74,7 +74,7 @@ export class AuthService {
 
     return {
       message: 'utilisateur connecté',
-      data: {
+      details: {
         user,
         accessToken,
         refreshToken,
@@ -110,7 +110,7 @@ export class AuthService {
         });
         return {
           message: 'tokens rafraichis',
-          data: {
+          details: {
             accessToken,
             refreshToken,
           },
@@ -135,8 +135,8 @@ export class AuthService {
     phone: number;
   }): Promise<string[]> {
     return await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '5m' }),
-      this.jwtService.signAsync(payload, { expiresIn: '2s' }),
+      this.jwtService.signAsync(payload, { expiresIn: '4h' }),
+      this.jwtService.signAsync(payload, { expiresIn: '6h' }),
     ]);
   }
 }

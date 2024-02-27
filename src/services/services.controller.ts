@@ -21,6 +21,7 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { AccessTokenValidatedRequestInterface } from '@/common/interfaces/access-token-validated-request.interface';
@@ -36,10 +37,10 @@ import { CustomResponseInterface } from '@/common/interfaces/response.interface'
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
-  @Post()
   @ApiBody({ type: CreateServiceDto })
   @ApiCreatedResponse({ description: 'service créé!' })
-  @ApiBadRequestResponse({ description: 'un service avec ce nom existe déja' })
+  @ApiBadRequestResponse({ description: 'un service avec ce nom existe déja' }) // TODO gérer cette erreur: le cas où s=le service est créé par des comptes utilisateurs différents
+  @Post()
   async create(
     @Body() createServiceDto: CreateServiceDto,
     @Req() req: AccessTokenValidatedRequestInterface,
@@ -68,6 +69,7 @@ export class ServicesController {
     return await this.servicesService.findOneByName(name, req);
   }
 
+  @ApiParam({ name: 'id', type: Number })
   @Get(':id')
   async findOneById(
     @Param(
@@ -80,6 +82,10 @@ export class ServicesController {
     return await this.servicesService.findOneById(id, req);
   }
 
+  @ApiBody({ type: UpdateServiceDto })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiCreatedResponse({ description: 'service modifié !' })
+  @ApiBadRequestResponse({ description: 'impossible de trouver ce service' })
   @Put(':id')
   async update(
     @Param(
@@ -92,6 +98,9 @@ export class ServicesController {
     return await this.servicesService.update(id, updateServiceDto);
   }
 
+  @ApiParam({ name: 'id', type: Number })
+  @ApiCreatedResponse({ description: 'service supprimé !' })
+  @ApiBadRequestResponse({ description: 'impossible de trouver ce service' })
   @Delete(':id')
   async remove(
     @Param(

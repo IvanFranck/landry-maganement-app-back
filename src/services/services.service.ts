@@ -172,12 +172,12 @@ export class ServicesService {
         throw new NotFoundException();
       }
       return {
-        message: 'service updated',
+        message: 'service modifié',
         service,
       };
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new BadRequestException("can't find any service with this id");
+        throw new BadRequestException('impossible de trouver ce service');
       }
       console.error('error: ', error);
       throw new BadRequestException(error);
@@ -198,13 +198,13 @@ export class ServicesService {
         },
       });
       return {
-        message: 'service deleted',
+        message: 'service supprimé',
         service,
       };
     } catch (error) {
       console.error('error: ', error);
       if (error.code === 'P2025') {
-        throw new BadRequestException("can't find any service with this id");
+        throw new BadRequestException('impossible de trouver ce service');
       }
       throw new BadRequestException(error);
     }

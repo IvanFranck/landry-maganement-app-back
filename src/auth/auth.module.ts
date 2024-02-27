@@ -7,7 +7,6 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { JWT_CONSTANT } from './constants';
 import { AccessTokenStrategy } from './strategies/access-token-strategy';
-import { RefreshTokenStrategy } from './strategies/refresh-token-strategy';
 
 @Module({
   imports: [
@@ -19,13 +18,7 @@ import { RefreshTokenStrategy } from './strategies/refresh-token-strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    PrismaService,
-    AuthService,
-    LocalStrategy,
-    AccessTokenStrategy,
-    RefreshTokenStrategy,
-  ],
-  exports: [AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [PrismaService, AuthService, LocalStrategy, AccessTokenStrategy],
+  exports: [AccessTokenStrategy],
 })
 export class AuthModule {}

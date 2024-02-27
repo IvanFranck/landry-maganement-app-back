@@ -1,15 +1,15 @@
-import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Post, Req, UseGuards, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { Response } from 'express';
-import { RefreshTokenAuthGuard } from './guards/refresh-token-auth.guard';
 import {
   ApiBody,
   ApiCreatedResponse,
+  ApiInternalServerErrorResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { LoginUserDto } from './dto/login-user.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @ApiTags('auth')
 @Controller({
@@ -24,21 +24,15 @@ export class AuthController {
   @ApiBody({ type: LoginUserDto })
   @ApiCreatedResponse({ description: 'user logged in' })
   @ApiUnauthorizedResponse({ description: 'informations incorrectes' })
-  async login(@Req() req: any, @Res({ passthrough: true }) response: Response) {
-    await this.authService.login(req.user, response);
-    response.send({
-      message: 'user logged in',
-      user: req.user,
-    });
+  async login(@Req() req: any) {
+    return await this.authService.login(req.user);
   }
 
-  @UseGuards(RefreshTokenAuthGuard)
   @Post('refresh')
-  async refreshToken(
-    @Req() req: any,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    await this.authService.refreshToken(req.user, response);
-    response.send({ message: 'token refreshed', user: { ...req.user } });
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiInternalServerErrorResponse({ description: 'bad or expired token' })
+  @ApiCreatedResponse({ description: 'tokens rafraichis' })
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return await this.authService.refreshToken(refreshTokenDto);
   }
 }

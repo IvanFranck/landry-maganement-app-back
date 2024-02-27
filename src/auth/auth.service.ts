@@ -1,17 +1,18 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ValidateUserDto } from './dto/validate-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { ValidatedUserEntity } from './entites/validate-user.entity';
 import { User } from '@prisma/client';
-import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import { getExpiry } from '@common/utils/dateTimeUtilities';
-import {
-  ACCESS_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from './constants';
-import { RefreshTokenGuardDto } from './dto/refresh-token-guard.dto';
+import { JWT_CONSTANT } from './constants';
+import { CustomResponseInterface } from '@/common/interfaces/response.interface';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { JWTDecodedEntity } from './entites/jwt-decoded-payload.entity';
 
 @Injectable()
 export class AuthService {
@@ -54,43 +55,72 @@ export class AuthService {
   }
 
   /**
-   * Handle user login, generate access and refresh tokens and set them to cookies.
+   * Asynchronous function for user login.
    *
-   * @param {Omit<User, 'password'>} user - description of parameter
-   * @param {Response} response - description of parameter
-   * @return {Promise<void>} undefined
+   * @param {Omit<User, 'password'>} user - the user object without the password field
+   * @return {Promise<CustomResponseInterface<{ accessToken: string; refreshToken: string , user: Omit<User, 'password'>}>>} a promise that resolves to a custom response containing access and refresh tokens
    */
-  async login(user: Omit<User, 'password'>, response: Response): Promise<void> {
+  async login(user: Omit<User, 'password'>): Promise<
+    CustomResponseInterface<{
+      accessToken: string;
+      refreshToken: string;
+      user: Omit<User, 'password'>;
+    }>
+  > {
     const { id, username, phone, signUpCompleted } = user;
     const payload = { sub: id, username, phone, signUpCompleted };
 
     const [accessToken, refreshToken] = await this.getTokens(payload);
-    const [accessTokenExpires, refreshTokenExpires] = this.getExpiries();
 
-    response.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-      httpOnly: true,
-      expires: accessTokenExpires,
-    });
-
-    response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      expires: refreshTokenExpires,
-    });
+    return {
+      message: 'utilisateur connecté',
+      details: {
+        user,
+        accessToken,
+        refreshToken,
+      },
+    };
   }
 
-  async refreshToken(user: RefreshTokenGuardDto, response: Response) {
-    const [accessToken, refreshToken] = await this.getTokens(user);
-    const [accessTokenExpires, refreshTokenExpires] = this.getExpiries();
-
-    response.cookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, {
-      httpOnly: true,
-      expires: accessTokenExpires,
-    });
-
-    response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      expires: refreshTokenExpires,
-    });
+  /**
+   * A function to refresh the token.
+   *
+   * @param {RefreshTokenDto} refreshTokenDto - the DTO containing the refresh token
+   * @return {Promise<CustomResponseInterface<{accessToken: string; refreshToken: string;}>>} a promise that resolves to a custom response containing an access token and a refresh token
+   */
+  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<
+    CustomResponseInterface<{
+      accessToken: string;
+      refreshToken: string;
+    }>
+  > {
+    try {
+      const token: JWTDecodedEntity = await this.jwtService.verifyAsync(
+        refreshTokenDto.refreshToken,
+        {
+          ignoreExpiration: false,
+          publicKey: JWT_CONSTANT.PUBLIC_KEY,
+        },
+      );
+      if (token) {
+        const [accessToken, refreshToken] = await this.getTokens({
+          sub: token.sub,
+          username: token.username,
+          phone: token.phone,
+        });
+        return {
+          message: 'tokens rafraichis',
+          details: {
+            accessToken,
+            refreshToken,
+          },
+        };
+      } else {
+        throw new InternalServerErrorException('token expiré');
+      }
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -105,17 +135,8 @@ export class AuthService {
     phone: number;
   }): Promise<string[]> {
     return await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '2d' }),
-      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
+      this.jwtService.signAsync(payload, { expiresIn: '4h' }),
+      this.jwtService.signAsync(payload, { expiresIn: '6h' }),
     ]);
-  }
-
-  /**
-   * retrieves an array of expiry dates.
-   *
-   * @return {Date[]} an array of dates
-   */
-  getExpiries(): Date[] {
-    return [getExpiry(2, 'days'), getExpiry(7, 'days')];
   }
 }

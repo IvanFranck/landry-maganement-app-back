@@ -1,39 +1,59 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/prisma.service';
 import { Service } from '@prisma/client';
+import { CustomResponseInterface } from '@/common/interfaces/response.interface';
+import { AccessTokenValidatedRequestInterface } from '@/common/interfaces/access-token-validated-request.interface';
 
 @Injectable()
 export class ServicesService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * create service.
+   * A function to create a new service.
    *
-   * @param {CreateServiceDto} createServiceDto - the data to create a new service
-   * @return {Promise<{ messge: string, service: Service }>} a Promise containing an object with a message and the created service
+   * @param {CreateServiceDto} createServiceDto The service data
+   * @param {AccessTokenValidatedRequestInterface} request The validated request object
+   * @return {Promise<CustomResponseInterface<Service>>} The created service
    */
   async create(
     createServiceDto: CreateServiceDto,
-  ): Promise<{ messge: string; service: Service }> {
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<CustomResponseInterface<Service>> {
+    const id = request.user.sub;
     try {
-      const service = await this.prisma.service.create({
-        data: { ...createServiceDto },
+      const user = await this.prisma.user.update({
+        where: {
+          id,
+        },
+        data: {
+          services: {
+            create: createServiceDto,
+          },
+        },
+        select: {
+          services: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 1,
+          },
+        },
       });
 
       return {
-        messge: 'service created!',
-        service,
+        message: 'service créé!',
+        details: user.services[0],
       };
     } catch (error) {
-      console.error('error: ', error);
       if (error.code === 'P2002') {
-        throw new BadRequestException('service with this name already exists');
+        throw new BadRequestException('un service avec ce nom existe déja');
       }
       throw new BadRequestException(error);
     }
@@ -44,21 +64,28 @@ export class ServicesService {
    *
    * @return {Promise<Service[]>} The list of services found
    */
-  async findAll(): Promise<Service[]> {
+  async findAll(
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<CustomResponseInterface<Service[]>> {
+    const userId = request.user.sub;
     try {
-      const services = await this.prisma.service.findMany();
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+        include: {
+          services: true,
+        },
+      });
 
-      if (!services || services.length === 0) {
-        throw new NotFoundException('any service found');
-      }
+      const services = user.services;
 
-      return services;
+      return {
+        message: 'liste des services',
+        details: services,
+      };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      console.error('error: ', error);
-      throw new NotFoundException(error);
+      throw new InternalServerErrorException(error);
     }
   }
 
@@ -68,18 +95,48 @@ export class ServicesService {
    * @param {string} name - the name of the service to find
    * @return {Promise<{ message: string, service: Service }>} an object containing a message and the service found
    */
-  async findOne(name: string): Promise<{ message: string; service: Service }> {
+  async findOneByName(
+    name: string,
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<{ message: string; service: Service }> {
     try {
-      const services = await this.findAll();
+      const services = await this.findAll(request);
 
-      const service = services.find((service) => service.label.includes(name));
+      const service = services.details.find((service) =>
+        service.label.includes(name),
+      );
 
       if (!service) {
         throw new NotFoundException('service not found');
       }
       return {
-        message: 'service found',
+        message: 'service trouvé',
         service,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('error: ', error);
+      throw new NotFoundException(error);
+    }
+  }
+
+  async findOneById(
+    id: number,
+    request: AccessTokenValidatedRequestInterface,
+  ): Promise<CustomResponseInterface<Service>> {
+    try {
+      const services = await this.findAll(request);
+
+      const service = services.details.find((service) => service.id === id);
+
+      if (!service) {
+        throw new NotFoundException('service not found');
+      }
+      return {
+        message: 'service trouvé',
+        details: service,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -115,12 +172,12 @@ export class ServicesService {
         throw new NotFoundException();
       }
       return {
-        message: 'service updated',
+        message: 'service modifié',
         service,
       };
     } catch (error) {
       if (error.code === 'P2025') {
-        throw new BadRequestException("can't find any service with this id");
+        throw new BadRequestException('impossible de trouver ce service');
       }
       console.error('error: ', error);
       throw new BadRequestException(error);
@@ -141,13 +198,13 @@ export class ServicesService {
         },
       });
       return {
-        message: 'service deleted',
+        message: 'service supprimé',
         service,
       };
     } catch (error) {
       console.error('error: ', error);
       if (error.code === 'P2025') {
-        throw new BadRequestException("can't find any service with this id");
+        throw new BadRequestException('impossible de trouver ce service');
       }
       throw new BadRequestException(error);
     }

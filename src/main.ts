@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common/pipes';
 import { ConfigService } from '@nestjs/config';
-import * as cookieParser from 'cookie-parser';
 import { CustomExptionFilter } from '@common/filters/custom-exeption.filter';
 import { VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -13,6 +12,9 @@ async function bootstrap() {
     logger: ['warn', 'error', 'log'],
   });
   const configService = app.get(ConfigService);
+
+  // enabling cors
+  app.enableCors();
 
   // enabling versioning
   app.enableVersioning({
@@ -30,14 +32,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config, {});
   SwaggerModule.setup('api', app, document);
 
-  // enabling cors
-  app.enableCors();
-
   // setting up custom exception global filters
   app.useGlobalFilters(new CustomExptionFilter());
 
   // setting up cookie parser
-  app.use(cookieParser());
+  // app.use(cookieParser());
 
   app.useGlobalPipes(
     new ValidationPipe({
